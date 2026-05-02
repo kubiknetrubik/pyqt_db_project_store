@@ -1,0 +1,1 @@
+# pyqt_db_project_store
