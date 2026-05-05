@@ -31,6 +31,7 @@ class CustomersWindow(QtWidgets.QMainWindow):
         self.b_save.clicked.connect(self.save)
         self.b_delete.clicked.connect(self.delete)
         self.le_search.textChanged.connect(self.apply_search)
+        self.b_orders.clicked.connect(self.open_orders)
     def next(self):
         if not self.check():
             self.mapper.toNext()
@@ -69,6 +70,25 @@ class CustomersWindow(QtWidgets.QMainWindow):
         self.main_menu.move(self.pos())
         self.main_menu.show()
         self.close()
+    def open_orders(self):
+        if self.model.isDirty():
+            self.model.revertAll()
+            self.model.select()
+
+        current_row = self.mapper.currentIndex()
+        if current_row < 0:
+            QtWidgets.QMessageBox.warning(self, "Ошибка", "Выберите покупателя")
+            return
+
+        customer_id = self.model.index(current_row, 0).data()
+        if not customer_id:
+            QtWidgets.QMessageBox.warning(self, "Ошибка", "Сначала сохраните покупателя")
+            return
+
+        self.hide()
+        self.orders_window = OrdersWindow(self, customer_id=customer_id)
+        self.orders_window.move(self.pos())
+        self.orders_window.show()
     def check(self):
         if self.model.isDirty():
             current_row = self.mapper.currentIndex()

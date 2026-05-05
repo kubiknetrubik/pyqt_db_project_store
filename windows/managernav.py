@@ -1,11 +1,22 @@
 from PyQt6 import QtWidgets, uic
-from PyQt6.QtSql import QSqlQuery
 from windows.customers import CustomersWindow
 from windows.orders import OrdersWindow
+
+
 class ManagerNav(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
         uic.loadUi('windows/managernav.ui', self)
+        store_id, ok = QtWidgets.QInputDialog.getInt(
+            self, 
+            "ID магазина", 
+            "Введите ваш store_id (число):", 
+            1, 1, 100
+        )
+        if not ok:
+            self.close()
+            return
+        self.store_id = store_id
         self.b_customers.clicked.connect(self.gocustomers)
         self.b_orders.clicked.connect(self.goorders)
         self.b_back.clicked.connect(self.close)
@@ -15,6 +26,7 @@ class ManagerNav(QtWidgets.QMainWindow):
         self.customers_window.move(self.pos())
         self.customers_window.show()
     def goorders(self):
-        self.orders_win = OrdersWindow(self)
+        self.orders_win = OrdersWindow(self, self.store_id)
+        self.orders_win.move(self.pos())
         self.orders_win.show()
         self.hide()

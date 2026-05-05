@@ -6,12 +6,12 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
+    <width>808</width>
     <height>600</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Продукты</string>
+   <string>Заказы</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QPushButton" name="b_back">
@@ -78,20 +78,13 @@
     </property>
     <layout class="QGridLayout" name="gridLayout_2">
      <item row="0" column="0">
-      <widget class="QPushButton" name="b_save">
-       <property name="text">
-        <string>Сохранить</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="0">
       <widget class="QPushButton" name="b_add">
        <property name="text">
         <string>Добавить</string>
        </property>
       </widget>
      </item>
-     <item row="2" column="0">
+     <item row="1" column="0">
       <widget class="QPushButton" name="b_delete">
        <property name="text">
         <string>Удалить</string>
@@ -115,21 +108,34 @@
      </font>
     </property>
     <property name="text">
-     <string>Покупатели</string>
+     <string>Заказы</string>
     </property>
    </widget>
    <widget class="QWidget" name="gridLayoutWidget_3">
     <property name="geometry">
      <rect>
-      <x>80</x>
-      <y>130</y>
-      <width>268</width>
+      <x>30</x>
+      <y>100</y>
+      <width>291</width>
       <height>226</height>
      </rect>
     </property>
     <layout class="QGridLayout" name="gridLayout_3">
-     <item row="0" column="1">
-      <widget class="QLineEdit" name="le_surname">
+     <item row="0" column="0">
+      <widget class="QLabel" name="label_2">
+       <property name="minimumSize">
+        <size>
+         <width>100</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>Код</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QLineEdit" name="le_date">
        <property name="minimumSize">
         <size>
          <width>150</width>
@@ -138,8 +144,15 @@
        </property>
       </widget>
      </item>
-     <item row="1" column="1">
-      <widget class="QLineEdit" name="le_st_name">
+     <item row="3" column="0">
+      <widget class="QLabel" name="label_5">
+       <property name="text">
+        <string>Магазин</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QLineEdit" name="le_id">
        <property name="minimumSize">
         <size>
          <width>150</width>
@@ -149,68 +162,20 @@
       </widget>
      </item>
      <item row="1" column="0">
-      <widget class="QLabel" name="label_3">
-       <property name="minimumSize">
-        <size>
-         <width>110</width>
-         <height>0</height>
-        </size>
-       </property>
-       <property name="text">
-        <string>Имя</string>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="0">
       <widget class="QLabel" name="label_4">
-       <property name="minimumSize">
-        <size>
-         <width>110</width>
-         <height>0</height>
-        </size>
-       </property>
        <property name="text">
-        <string>Отчество</string>
+        <string>Дата заказа</string>
        </property>
       </widget>
      </item>
-     <item row="0" column="0">
-      <widget class="QLabel" name="label_2">
-       <property name="minimumSize">
-        <size>
-         <width>110</width>
-         <height>0</height>
-        </size>
-       </property>
+     <item row="4" column="0">
+      <widget class="QLabel" name="label_6">
        <property name="text">
-        <string>Фамилия</string>
+        <string>Покупатель</string>
        </property>
       </widget>
      </item>
-     <item row="3" column="0">
-      <widget class="QLabel" name="label_5">
-       <property name="minimumSize">
-        <size>
-         <width>110</width>
-         <height>0</height>
-        </size>
-       </property>
-       <property name="text">
-        <string>Номер телефона</string>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="1">
-      <widget class="QLineEdit" name="le_sec_name">
-       <property name="minimumSize">
-        <size>
-         <width>150</width>
-         <height>40</height>
-        </size>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="1">
+     <item row="5" column="1">
       <widget class="QLineEdit" name="le_phone">
        <property name="minimumSize">
         <size>
@@ -220,36 +185,79 @@
        </property>
       </widget>
      </item>
+     <item row="3" column="1">
+      <widget class="QComboBox" name="cb_store">
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>40</height>
+        </size>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1">
+      <widget class="QComboBox" name="cb_customer">
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>40</height>
+        </size>
+       </property>
+      </widget>
+     </item>
     </layout>
+   </widget>
+   <widget class="QTableView" name="tw">
+    <property name="geometry">
+     <rect>
+      <x>470</x>
+      <y>100</y>
+      <width>321</width>
+      <height>231</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_3">
+    <property name="geometry">
+     <rect>
+      <x>380</x>
+      <y>100</y>
+      <width>121</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Состав заказа</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="b_otchet">
+    <property name="geometry">
+     <rect>
+      <x>300</x>
+      <y>370</y>
+      <width>171</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Отчет по заказам</string>
+    </property>
    </widget>
    <widget class="QLineEdit" name="le_search">
     <property name="geometry">
      <rect>
-      <x>620</x>
-      <y>130</y>
+      <x>680</x>
+      <y>60</y>
       <width>113</width>
       <height>22</height>
      </rect>
     </property>
    </widget>
-   <widget class="QPushButton" name="b_orders">
+   <widget class="QLabel" name="label_8">
     <property name="geometry">
      <rect>
-      <x>620</x>
-      <y>170</y>
-      <width>113</width>
-      <height>28</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Заказы</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_7">
-    <property name="geometry">
-     <rect>
-      <x>660</x>
-      <y>110</y>
+      <x>710</x>
+      <y>40</y>
       <width>57</width>
       <height>14</height>
      </rect>
@@ -258,13 +266,52 @@
      <string>Поиск</string>
     </property>
    </widget>
+   <widget class="QPushButton" name="b_save">
+    <property name="geometry">
+     <rect>
+      <x>330</x>
+      <y>190</y>
+      <width>131</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Сохранить</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="btn_add_detail">
+    <property name="geometry">
+     <rect>
+      <x>510</x>
+      <y>340</y>
+      <width>121</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Добавить товар</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="btn_delete_detail">
+    <property name="geometry">
+     <rect>
+      <x>640</x>
+      <y>340</y>
+      <width>111</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Удалить товар</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>800</width>
+     <width>808</width>
      <height>19</height>
     </rect>
    </property>

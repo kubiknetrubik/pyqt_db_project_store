@@ -2,6 +2,8 @@ from PyQt6 import QtWidgets, uic
 from PyQt6.QtCore import Qt
 from PyQt6.QtSql import QSqlRelationalTableModel, QSqlRelation, QSqlRelationalDelegate
 
+from windows.report_window import query_rows, show_report
+
 class CategoriesWindow(QtWidgets.QMainWindow):
     def __init__(self, menu):
         super().__init__()
@@ -41,6 +43,7 @@ class CategoriesWindow(QtWidgets.QMainWindow):
         self.b_add.clicked.connect(self.add)
         self.b_save.clicked.connect(self.save)
         self.b_delete.clicked.connect(self.delete)
+        self.b_otchet.clicked.connect(self.make_report)
     def update_detail_table(self):
         current_master_row = self.master_mapper.currentIndex()
         category_id = self.master_model.index(current_master_row, 0).data()
@@ -85,6 +88,29 @@ class CategoriesWindow(QtWidgets.QMainWindow):
         self.main_menu.move(self.pos())
         self.main_menu.show()
         self.close()
+    def make_report(self):
+        try:
+            rows = query_rows("""
+                SELECT
+                    c.category_name,
+                    COUNT(p.product_id) AS products_count,
+                    COALESCE(SUM(p.price), 0) AS total_price,
+                    COALESCE(AVG(p.price), 0) AS average_price
+                FROM categories c
+                LEFT JOIN products p ON p.category_id = c.category_id
+                GROUP BY c.category_id, c.category_name
+                ORDER BY total_price DESC, c.category_name
+            """)
+        except RuntimeError as error:
+            QtWidgets.QMessageBox.warning(self, "Ошибка", str(error))
+            return
+
+        self.report_window = show_report(
+            self,
+            "Стоимость категорий",
+            ["Категория", "Товаров", "Общая стоимость", "Средняя цена"],
+            rows,
+        )
     def check(self):
         if self.master_model.isDirty():
             current_row = self.master_mapper.currentIndex()
