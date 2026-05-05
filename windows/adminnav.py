@@ -2,6 +2,11 @@ from PyQt6 import QtWidgets, uic
 from PyQt6.QtSql import QSqlQuery
 from windows.products import ProductsWindow
 from windows.categories import CategoriesWindow
+from windows.customers import CustomersWindow
+from windows.orders import OrdersWindow
+from windows.shippers import ShippersWindow
+from windows.storages import StoragesWindow
+from windows.stores import StoresWindow
 class AdminNav(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
@@ -25,12 +30,27 @@ class AdminNav(QtWidgets.QMainWindow):
         self.categories_window.move(self.pos())
         self.categories_window.show()
     def gocustomers(self):
-        print("gocustomers")
+        self.hide()
+        self.customers_window = CustomersWindow(self)
+        self.customers_window.move(self.pos())
+        self.customers_window.show()
     def goorders(self):
-        print("goorders")
+        self.hide()
+        self.orders_window = OrdersWindow(self)
+        self.orders_window.move(self.pos())
+        self.orders_window.show()
     def goshippers(self):
-        print("goshippers")
+        self.hide()
+        self.shippers_window = ShippersWindow(self)
+        self.shippers_window.move(self.pos())
+        self.shippers_window.show()
     def gostorages(self):
-        print("gostorages")
+        self.hide()
+        self.storages_window = StoragesWindow(self)
+        self.storages_window.move(self.pos())
+        self.storages_window.show()
     def gostores(self):
-        print("gostores")
+        self.hide()
+        self.stores_window = StoresWindow(self)
+        self.stores_window.move(self.pos())
+        self.stores_window.show()

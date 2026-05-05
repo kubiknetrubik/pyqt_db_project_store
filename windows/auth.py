@@ -2,6 +2,7 @@ from PyQt6 import QtWidgets, uic
 from PyQt6.QtSql import QSqlQuery
 from windows.adminnav import AdminNav
 from windows.managernav import ManagerNav
+from windows.orders2 import OrdersWindow
 class AuthWindow(QtWidgets.QMainWindow):
     def __init__(self, main_menu):
         super().__init__()
@@ -38,6 +39,11 @@ class AuthWindow(QtWidgets.QMainWindow):
                 self.manager_window = ManagerNav()
                 self.manager_window.move(self.pos())
                 self.manager_window.show()
+            else:
+                self.hide()
+                self.man_window = OrdersWindow(self)
+                self.man_window.move(self.pos())
+                self.man_window.show()
         else:
             QtWidgets.QMessageBox.warning(self, "Ошибка", "Неверный логин или пароль")
 

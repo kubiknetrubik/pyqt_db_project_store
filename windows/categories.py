@@ -47,21 +47,21 @@ class CategoriesWindow(QtWidgets.QMainWindow):
         self.detail_model.setFilter(f"category_id = {category_id}")
         self.detail_model.select()
     def next(self):
-        self.check()
-        self.master_mapper.toNext()
-        self.update_detail_table()
+        if not self.check():
+            self.master_mapper.toNext()
+            self.update_detail_table()
     def prev(self):
-        self.check()
-        self.master_mapper.toPrevious()
-        self.update_detail_table()
+        if not self.check():
+            self.master_mapper.toPrevious()
+            self.update_detail_table()
     def first(self):
-        self.check()
-        self.master_mapper.toFirst()
-        self.update_detail_table()
+        if not self.check():
+            self.master_mapper.toFirst()
+            self.update_detail_table()
     def last(self):
-        self.check()
-        self.master_mapper.toLast()
-        self.update_detail_table()
+        if not self.check():
+            self.master_mapper.toLast()
+            self.update_detail_table()
     def add(self):
         row = self.model.rowCount()
         self.model.insertRow(row)
@@ -88,9 +88,11 @@ class CategoriesWindow(QtWidgets.QMainWindow):
     def check(self):
         if self.master_model.isDirty():
             current_row = self.master_mapper.currentIndex()
-            name_val = self.master_model.index(current_row, 1).data() 
+            name_val = self.master_model.index(current_row,0).data() 
             if not name_val or name_val.strip() == "":
                 self.master_model.revertAll()
+                self.model.select()   
+                self.mapper.toFirst()
                 return True
         return False
     

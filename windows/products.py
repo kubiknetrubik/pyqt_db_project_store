@@ -88,8 +88,12 @@ class ProductsWindow(QtWidgets.QMainWindow):
     def check(self):
         if self.model.isDirty():
             current_row = self.mapper.currentIndex()
-            name_val = self.model.index(current_row, 1).data() 
-            if not name_val or name_val.strip() == "":
+            name_val = self.model.index(current_row, 1).data()
+            price = self.model.index(current_row, 2).data() 
+            category = self.model.index(current_row, 3).data() 
+            shipper = self.model.index(current_row, 4).data() 
+            storage = self.model.index(current_row, 5).data() 
+            if not name_val or name_val.strip() == "" or price =="" or category == "" or shipper == "" or storage == "":
                 self.model.revertAll()
                 return True
         return False
