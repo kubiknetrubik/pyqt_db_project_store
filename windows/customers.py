@@ -85,8 +85,10 @@ class CustomersWindow(QtWidgets.QMainWindow):
             QtWidgets.QMessageBox.warning(self, "Ошибка", "Сначала сохраните покупателя")
             return
 
+        store_id = getattr(self.main_menu, "store_id", None)
+
         self.hide()
-        self.orders_window = OrdersWindow(self, customer_id=customer_id)
+        self.orders_window = OrdersWindow(self, store_id=store_id, customer_id=customer_id)
         self.orders_window.move(self.pos())
         self.orders_window.show()
     def check(self):

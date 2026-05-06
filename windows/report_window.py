@@ -58,7 +58,7 @@ def table_html(title, headers, rows):
     header_cells = "".join(f"<th>{escape(str(header))}</th>" for header in headers)
     body = []
     for row in rows:
-        cells = "".join(f"<td>{escape('' if value is None else str(value))}</td>" for value in row)
+        cells = "".join(f"<td>{escape(format_value(value))}</td>" for value in row)
         body.append(f"<tr>{cells}</tr>")
 
     if not body:
@@ -88,6 +88,17 @@ def table_html(title, headers, rows):
     </body>
     </html>
     """
+
+
+def format_value(value):
+    if value is None:
+        return ""
+    if hasattr(value, "toString"):
+        try:
+            return value.toString("yyyy-MM-dd")
+        except TypeError:
+            return value.toString()
+    return str(value)
 
 
 def show_report(parent, title, headers, rows):
