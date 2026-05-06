@@ -77,6 +77,13 @@
      </rect>
     </property>
     <layout class="QGridLayout" name="gridLayout_2">
+     <item row="2" column="0">
+      <widget class="QPushButton" name="b_delete">
+       <property name="text">
+        <string>Удалить</string>
+       </property>
+      </widget>
+     </item>
      <item row="0" column="0">
       <widget class="QPushButton" name="b_add">
        <property name="text">
@@ -85,9 +92,9 @@
       </widget>
      </item>
      <item row="1" column="0">
-      <widget class="QPushButton" name="b_delete">
+      <widget class="QPushButton" name="b_save">
        <property name="text">
-        <string>Удалить</string>
+        <string>Сохранить</string>
        </property>
       </widget>
      </item>
@@ -263,34 +270,21 @@
    <widget class="QLabel" name="label_8">
     <property name="geometry">
      <rect>
-      <x>710</x>
+      <x>680</x>
       <y>40</y>
-      <width>57</width>
-      <height>14</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Поиск</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="b_save">
-    <property name="geometry">
-     <rect>
-      <x>330</x>
-      <y>190</y>
       <width>131</width>
       <height>20</height>
      </rect>
     </property>
     <property name="text">
-     <string>Сохранить</string>
+     <string>Поиск по фамилии</string>
     </property>
    </widget>
    <widget class="QPushButton" name="btn_add_detail">
     <property name="geometry">
      <rect>
-      <x>510</x>
-      <y>340</y>
+      <x>470</x>
+      <y>330</y>
       <width>121</width>
       <height>31</height>
      </rect>
@@ -302,14 +296,27 @@
    <widget class="QPushButton" name="btn_delete_detail">
     <property name="geometry">
      <rect>
-      <x>640</x>
-      <y>340</y>
+      <x>680</x>
+      <y>330</y>
       <width>111</width>
       <height>31</height>
      </rect>
     </property>
     <property name="text">
      <string>Удалить товар</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="b_save_2">
+    <property name="geometry">
+     <rect>
+      <x>590</x>
+      <y>330</y>
+      <width>91</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Сохранить</string>
     </property>
    </widget>
   </widget>
