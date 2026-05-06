@@ -255,7 +255,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>Поиск по фамилии</string>
+     <string>Поиск по номеру</string>
     </property>
    </widget>
   </widget>

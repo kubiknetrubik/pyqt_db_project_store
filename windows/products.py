@@ -46,6 +46,13 @@ class ProductsWindow(QtWidgets.QMainWindow):
         self.b_otchet_3.clicked.connect(self.report_product_purchase_stats)
         self.rb_1.toggled.connect(lambda: self.filter_by_shipper("Рога и Копыта"))
         self.rb_2.toggled.connect(lambda: self.filter_by_shipper("ТрансЛогистик"))
+
+    def find_row_by_id(self, product_id):
+        for row in range(self.model.rowCount()):
+            if self.model.index(row, 0).data() == product_id:
+                return row
+        return -1
+
     def next(self):
         self.check()
         self.mapper.toNext()
@@ -70,16 +77,32 @@ class ProductsWindow(QtWidgets.QMainWindow):
         self.model.select()
         self.mapper.toFirst()
     def save(self):
+        current_row = self.mapper.currentIndex()
+        current_id = None
+        if current_row >= 0:
+            current_id = self.model.index(current_row, 0).data()
         self.mapper.submit()
         if self.model.submitAll():
+            self.model.select()
+            target_row = self.find_row_by_id(current_id) if current_id is not None else self.model.rowCount() - 1
+            if target_row >= 0:
+                self.mapper.setCurrentIndex(target_row)
             QtWidgets.QMessageBox.information(self, "Успех", "Данные сохранены!")
         else:
             QtWidgets.QMessageBox.warning(self, "Ошибка", f"Ошибка сохранения: {self.model.lastError().text()}")
     def apply_search(self):
+        current_row = self.mapper.currentIndex()
+        current_id = None
+        if current_row >= 0:
+            current_id = self.model.index(current_row, 0).data()
         filter_str = f"product_name ILIKE '%{self.le_search.text()}%'"
         self.model.setFilter(filter_str)
         self.model.select()
-        self.mapper.toFirst()
+        target_row = self.find_row_by_id(current_id) if current_id is not None else 0
+        if target_row >= 0:
+            self.mapper.setCurrentIndex(target_row)
+        elif self.model.rowCount() > 0:
+            self.mapper.toFirst()
     def filter_by_shipper(self, shipper_name):
         if self.sender().isChecked():
             filter_str = f"shipper_name = '{shipper_name}'"
@@ -147,17 +170,79 @@ class ProductsWindow(QtWidgets.QMainWindow):
         )
 
     def report_product_purchase_stats(self):
+        dialog = QtWidgets.QDialog(self)
+        dialog.setWindowTitle("Параметры отчёта")
+        scope_combo = QtWidgets.QComboBox(dialog)
+        scope_combo.addItems(["За последний год", "Все заказы"])
+        group_combo = QtWidgets.QComboBox(dialog)
+        group_combo.addItems(["По товарам", "По категориям"])
+        ok_button = QtWidgets.QPushButton("Сформировать", dialog)
+        cancel_button = QtWidgets.QPushButton("Отмена", dialog)
+
+        form = QtWidgets.QFormLayout()
+        form.addRow("Период", scope_combo)
+        form.addRow("Группировка", group_combo)
+        buttons = QtWidgets.QHBoxLayout()
+        buttons.addStretch()
+        buttons.addWidget(ok_button)
+        buttons.addWidget(cancel_button)
+        layout = QtWidgets.QVBoxLayout(dialog)
+        layout.addLayout(form)
+        layout.addLayout(buttons)
+        ok_button.clicked.connect(dialog.accept)
+        cancel_button.clicked.connect(dialog.reject)
+
+        if dialog.exec() != QtWidgets.QDialog.DialogCode.Accepted:
+            return
+
+        year_only = scope_combo.currentIndex() == 0
+        group_by_category = group_combo.currentIndex() == 1
+        sales_where = ""
+        period_title = "за последний год" if year_only else "по всем заказам"
+        if year_only:
+            sales_where = """
+                WHERE o.order_date >= CURRENT_DATE - INTERVAL '1 year'
+                  AND o.order_date <= CURRENT_DATE
+            """
+
+        if group_by_category:
+            select_sql = """
+                COALESCE(c.category_name, 'Без категории') AS group_name,
+                COALESCE(SUM(sales.quantity), 0) AS total_quantity,
+                COUNT(DISTINCT sales.order_id) AS orders_count,
+                COALESCE(SUM(sales.quantity * p.price), 0) AS total_amount
+            """
+            group_sql = "GROUP BY c.category_id, c.category_name"
+            order_sql = "ORDER BY total_quantity DESC, group_name"
+            headers = ["Категория", "Куплено шт.", "Заказов", "Сумма"]
+            title = f"Статистика покупки продуктов по категориям, {period_title}"
+        else:
+            select_sql = """
+                p.product_name,
+                COALESCE(c.category_name, 'Без категории') AS category_name,
+                COALESCE(SUM(sales.quantity), 0) AS total_quantity,
+                COUNT(DISTINCT sales.order_id) AS orders_count,
+                COALESCE(SUM(sales.quantity * p.price), 0) AS total_amount
+            """
+            group_sql = "GROUP BY p.product_id, p.product_name, c.category_name"
+            order_sql = "ORDER BY total_quantity DESC, p.product_name"
+            headers = ["Товар", "Категория", "Куплено шт.", "Заказов", "Сумма"]
+            title = f"Статистика покупки продуктов по товарам, {period_title}"
+
         try:
-            rows = query_rows("""
+            rows = query_rows(f"""
                 SELECT
-                    p.product_name,
-                    COALESCE(SUM(oc.quantity), 0) AS total_quantity,
-                    COUNT(DISTINCT oc.order_id) AS orders_count,
-                    COALESCE(SUM(oc.quantity * p.price), 0) AS total_amount
+                    {select_sql}
                 FROM products p
-                LEFT JOIN "orders compositions" oc ON oc.product_id = p.product_id
-                GROUP BY p.product_id, p.product_name
-                ORDER BY total_quantity DESC, p.product_name
+                LEFT JOIN categories c ON c.category_id = p.category_id
+                LEFT JOIN (
+                    SELECT oc.product_id, oc.quantity, oc.order_id
+                    FROM "orders compositions" oc
+                    JOIN orders o ON o.order_id = oc.order_id
+                    {sales_where}
+                ) sales ON sales.product_id = p.product_id
+                {group_sql}
+                {order_sql}
             """)
         except RuntimeError as error:
             QtWidgets.QMessageBox.warning(self, "Ошибка", str(error))
@@ -165,8 +250,8 @@ class ProductsWindow(QtWidgets.QMainWindow):
 
         self.report_window = show_report(
             self,
-            "Статистика по покупке продуктов",
-            ["Товар", "Куплено шт.", "Заказов", "Сумма"],
+            title,
+            headers,
             rows,
         )
     def check(self):

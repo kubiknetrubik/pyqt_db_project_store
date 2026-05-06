@@ -32,6 +32,13 @@ class CustomersWindow(QtWidgets.QMainWindow):
         self.b_delete.clicked.connect(self.delete)
         self.le_search.textChanged.connect(self.apply_search)
         self.b_orders.clicked.connect(self.open_orders)
+
+    def find_row_by_id(self, customer_id):
+        for row in range(self.model.rowCount()):
+            if self.model.index(row, 0).data() == customer_id:
+                return row
+        return -1
+
     def next(self):
         if not self.check():
             self.mapper.toNext()
@@ -54,18 +61,36 @@ class CustomersWindow(QtWidgets.QMainWindow):
         self.model.removeRow(current_row)
         self.model.submitAll()
         self.model.select()
-        self.mapper.toFirst()
+        if self.model.rowCount() > 0:
+            self.mapper.setCurrentIndex(min(current_row, self.model.rowCount() - 1))
     def save(self):
+        current_row = self.mapper.currentIndex()
+        current_id = None
+        if current_row >= 0:
+            current_id = self.model.index(current_row, 0).data()
         self.mapper.submit()
         if self.model.submitAll():
+            self.model.select()
+            target_row = self.find_row_by_id(current_id) if current_id is not None else self.model.rowCount() - 1
+            if target_row >= 0:
+                self.mapper.setCurrentIndex(target_row)
             QtWidgets.QMessageBox.information(self, "Успех", "Данные сохранены!")
         else:
             QtWidgets.QMessageBox.warning(self, "Ошибка", f"Ошибка сохранения: {self.model.lastError().text()}")
     def apply_search(self):
-        filter_str = f"customers_phone ILIKE '%{self.le_search.text()}%'"
+        current_row = self.mapper.currentIndex()
+        current_id = None
+        if current_row >= 0:
+            current_id = self.model.index(current_row, 0).data()
+        search_text = self.le_search.text().strip().replace("'", "''")
+        filter_str = f"customers_phone ILIKE '%{search_text}%'"
         self.model.setFilter(filter_str)
         self.model.select()
-        self.mapper.toFirst()
+        target_row = self.find_row_by_id(current_id) if current_id is not None else 0
+        if target_row >= 0:
+            self.mapper.setCurrentIndex(target_row)
+        elif self.model.rowCount() > 0:
+            self.mapper.toFirst()
     def return_to_menu(self):
         self.main_menu.move(self.pos())
         self.main_menu.show()
@@ -98,7 +123,7 @@ class CustomersWindow(QtWidgets.QMainWindow):
             if not name_val or name_val.strip() == "":
                 self.model.revertAll()
                 self.model.select()   
-                self.mapper.toFirst()
+                self.mapper.setCurrentIndex(min(current_row, max(self.model.rowCount() - 1, 0)))
                 return True
         return False
     

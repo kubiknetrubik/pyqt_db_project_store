@@ -44,8 +44,42 @@ class CategoriesWindow(QtWidgets.QMainWindow):
         self.b_save.clicked.connect(self.save)
         self.b_delete.clicked.connect(self.delete)
         self.b_otchet.clicked.connect(self.make_report)
+        self.le_search.textChanged.connect(self.apply_search)
+
+    def find_master_row_by_id(self, category_id):
+        for row in range(self.master_model.rowCount()):
+            if self.master_model.index(row, 0).data() == category_id:
+                return row
+        return -1
+
+    def apply_search(self):
+        current_row = self.master_mapper.currentIndex()
+        current_id = None
+        if current_row >= 0:
+            current_id = self.master_model.index(current_row, 0).data()
+
+        search_text = self.le_search.text().strip().replace("'", "''")
+        if search_text:
+            self.master_model.setFilter(f"category_name ILIKE '%{search_text}%'")
+        else:
+            self.master_model.setFilter("")
+        self.master_model.select()
+
+        target_row = self.find_master_row_by_id(current_id) if current_id is not None else 0
+        if target_row >= 0:
+            self.master_mapper.setCurrentIndex(target_row)
+        elif self.master_model.rowCount() > 0:
+            self.master_mapper.toFirst()
+        else:
+            self.master_mapper.setCurrentIndex(-1)
+        self.update_detail_table()
+
     def update_detail_table(self):
         current_master_row = self.master_mapper.currentIndex()
+        if current_master_row < 0:
+            self.detail_model.setFilter("category_id = -1")
+            self.detail_model.select()
+            return
         category_id = self.master_model.index(current_master_row, 0).data()
         self.detail_model.setFilter(f"category_id = {category_id}")
         self.detail_model.select()
@@ -66,24 +100,34 @@ class CategoriesWindow(QtWidgets.QMainWindow):
             self.master_mapper.toLast()
             self.update_detail_table()
     def add(self):
-        row = self.model.rowCount()
-        self.model.insertRow(row)
-        self.mapper.setCurrentIndex(row)
+        row = self.master_model.rowCount()
+        self.master_model.insertRow(row)
+        self.master_mapper.setCurrentIndex(row)
         self.le_name.setFocus()
         self.update_detail_table()
     def delete(self):
-        current_row = self.mapper.currentIndex()
-        self.model.removeRow(current_row)
-        self.model.submitAll()
-        self.model.select()
-        self.mapper.toFirst()
+        current_row = self.master_mapper.currentIndex()
+        self.master_model.removeRow(current_row)
+        self.master_model.submitAll()
+        self.master_model.select()
+        if self.master_model.rowCount() > 0:
+            self.master_mapper.setCurrentIndex(min(current_row, self.master_model.rowCount() - 1))
         self.update_detail_table()
     def save(self):
+        current_row = self.master_mapper.currentIndex()
+        current_id = None
+        if current_row >= 0:
+            current_id = self.master_model.index(current_row, 0).data()
         self.master_mapper.submit()
         if self.master_model.submitAll():
+            self.master_model.select()
+            target_row = self.find_master_row_by_id(current_id) if current_id is not None else self.master_model.rowCount() - 1
+            if target_row >= 0:
+                self.master_mapper.setCurrentIndex(target_row)
+            self.update_detail_table()
             QtWidgets.QMessageBox.information(self, "Успех", "Данные сохранены!")
         else:
-            QtWidgets.QMessageBox.warning(self, "Ошибка", f"Ошибка сохранения: {self.model.lastError().text()}")
+            QtWidgets.QMessageBox.warning(self, "Ошибка", f"Ошибка сохранения: {self.master_model.lastError().text()}")
     def return_to_menu(self):
         self.main_menu.move(self.pos())
         self.main_menu.show()
@@ -114,11 +158,11 @@ class CategoriesWindow(QtWidgets.QMainWindow):
     def check(self):
         if self.master_model.isDirty():
             current_row = self.master_mapper.currentIndex()
-            name_val = self.master_model.index(current_row,0).data() 
+            name_val = self.master_model.index(current_row,1).data()
             if not name_val or name_val.strip() == "":
                 self.master_model.revertAll()
-                self.model.select()   
-                self.mapper.toFirst()
+                self.master_model.select()
+                self.master_mapper.toFirst()
                 return True
         return False
     

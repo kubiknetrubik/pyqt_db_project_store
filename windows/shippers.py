@@ -44,12 +44,41 @@ class ShippersWindow(QtWidgets.QMainWindow):
         self.b_add.clicked.connect(self.add_shipper)
         self.b_delete.clicked.connect(self.delete_shipper)
         self.b_save.clicked.connect(self.save)
+        if hasattr(self, "b_save_2"):
+            self.b_save_2.clicked.connect(self.save)
         self.b_add_detail.clicked.connect(self.add_detail)
         self.b_delete_detail.clicked.connect(self.delete_detail)
+        self.le_search.textChanged.connect(self.apply_search)
         self.master_mapper.currentIndexChanged.connect(self.update_detail_table)
+
+    def find_master_row_by_id(self, shipper_id):
+        for row in range(self.master_model.rowCount()):
+            if self.master_model.index(row, 0).data() == shipper_id:
+                return row
+        return -1
+
+    def apply_search(self):
+        current_row = self.master_mapper.currentIndex()
+        current_id = None
+        if current_row >= 0:
+            current_id = self.master_model.index(current_row, 0).data()
+        search_text = self.le_search.text().strip().replace("'", "''")
+        self.master_model.setFilter(f"shipper_name ILIKE '%{search_text}%'" if search_text else "")
+        self.master_model.select()
+        target_row = self.find_master_row_by_id(current_id) if current_id is not None else 0
+        if target_row >= 0:
+            self.master_mapper.setCurrentIndex(target_row)
+        elif self.master_model.rowCount() > 0:
+            self.master_mapper.toFirst()
+        else:
+            self.master_mapper.setCurrentIndex(-1)
+        self.update_detail_table()
+
     def update_detail_table(self):
         current_row = self.master_mapper.currentIndex()
         if current_row < 0:
+            self.detail_model.setFilter("shipper_id = -1")
+            self.detail_model.select()
             return
         shipper_id = self.master_model.index(current_row, 0).data()
         if shipper_id is not None:
@@ -96,6 +125,10 @@ class ShippersWindow(QtWidgets.QMainWindow):
                 f"Не удалось удалить: {self.master_model.lastError().text()}")
 
     def save(self):
+        current_row = self.master_mapper.currentIndex()
+        current_id = None
+        if current_row >= 0:
+            current_id = self.master_model.index(current_row, 0).data()
         if not self.detail_model.submitAll():
             QtWidgets.QMessageBox.warning(self, "Ошибка",
                 f"Ошибка сохранения товаров: {self.detail_model.lastError().text()}")
@@ -103,7 +136,9 @@ class ShippersWindow(QtWidgets.QMainWindow):
         self.master_mapper.submit()
         if self.master_model.submitAll():
             self.master_model.select()
-            self.master_mapper.toFirst()
+            target_row = self.find_master_row_by_id(current_id) if current_id is not None else self.master_model.rowCount() - 1
+            if target_row >= 0:
+                self.master_mapper.setCurrentIndex(target_row)
             QtWidgets.QMessageBox.information(self, "Успех", "Данные поставщика сохранены")
         else:
             QtWidgets.QMessageBox.warning(self, "Ошибка",
@@ -117,7 +152,7 @@ class ShippersWindow(QtWidgets.QMainWindow):
             if (shipper_id is None or shipper_id <= 0) and (not name_val or name_val.strip() == ""):
                 self.master_model.revertAll()
                 self.master_model.select()
-                self.master_mapper.toFirst()
+                self.master_mapper.setCurrentIndex(min(current_row, max(self.master_model.rowCount() - 1, 0)))
                 return True
         return False
     def add_detail(self):
