@@ -107,7 +107,9 @@ class StoragesWindow(QtWidgets.QMainWindow):
 
     def add_storage(self):
         row = self.master_model.rowCount()
-        self.master_model.insertRow(row)
+        if not self.master_model.insertRow(row):
+            QtWidgets.QMessageBox.warning(self, "Ошибка", f"Не удалось добавить склад: {self.master_model.lastError().text()}")
+            return
         self.master_mapper.setCurrentIndex(row)
         self.le_address.setFocus()
         self.detail_model.setFilter("storage_id = -1")
@@ -122,7 +124,9 @@ class StoragesWindow(QtWidgets.QMainWindow):
             "Удалить склад? Все товары на нём также будут удалены!",
             QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No)
         if reply == QtWidgets.QMessageBox.StandardButton.Yes:
-            self.master_model.removeRow(current_row)
+            if not self.master_model.removeRow(current_row):
+                QtWidgets.QMessageBox.warning(self, "Ошибка", f"Не удалось удалить склад: {self.master_model.lastError().text()}")
+                return
             if self.master_model.submitAll():
                 self.master_model.select()
                 self.restore_master_row(fallback_row=current_row)
@@ -192,7 +196,9 @@ class StoragesWindow(QtWidgets.QMainWindow):
             QtWidgets.QMessageBox.warning(self, "Ошибка", "Выберите товар для удаления")
             return
         row = current_index.row()
-        self.detail_model.removeRow(row)
+        if not self.detail_model.removeRow(row):
+            QtWidgets.QMessageBox.warning(self, "Ошибка", f"Не удалось удалить товар: {self.detail_model.lastError().text()}")
+            return
         if not self.detail_model.submitAll():
             QtWidgets.QMessageBox.warning(self, "Ошибка", f"Не удалось удалить: {self.detail_model.lastError().text()}")
         else:

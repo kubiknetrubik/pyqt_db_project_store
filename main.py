@@ -39,7 +39,7 @@ def db_connect():
     db.setPassword('labs')
 
     if not db.open():
-        QtWidgets.QMessageBox.critical(None, "Database Error", 
+        QtWidgets.QMessageBox.critical(None, "Ошибка базы данных",
                                        f"Не удалось подключиться к Docker БД: {db.lastError().text()}")
         return False
     return True

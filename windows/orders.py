@@ -313,7 +313,7 @@ class OrdersWindow(QtWidgets.QMainWindow):
         self.revert_unsaved_changes()
         row = self.master_model.rowCount()
         if not self.master_model.insertRow(row):
-            QtWidgets.QMessageBox.warning(self, "Error", self.master_model.lastError().text())
+            QtWidgets.QMessageBox.warning(self, "Ошибка", f"Не удалось добавить заказ: {self.master_model.lastError().text()}")
             return
 
         order_id = self.next_order_id()
@@ -330,20 +330,22 @@ class OrdersWindow(QtWidgets.QMainWindow):
     def delete_order(self):
         current_row = self.master_mapper.currentIndex()
         if current_row < 0:
-            QtWidgets.QMessageBox.warning(self, "Error", "Select an order to delete.")
+            QtWidgets.QMessageBox.warning(self, "Ошибка", "Выберите заказ для удаления")
             return
 
         reply = QtWidgets.QMessageBox.question(
             self,
-            "Confirm",
-            "Delete this order and all its rows?",
+            "Подтверждение",
+            "Удалить этот заказ и все товары в нём?",
             QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No,
         )
         if reply != QtWidgets.QMessageBox.StandardButton.Yes:
             return
 
         self.detail_model.revertAll()
-        self.master_model.removeRow(current_row)
+        if not self.master_model.removeRow(current_row):
+            QtWidgets.QMessageBox.warning(self, "Ошибка", f"Не удалось удалить заказ: {self.master_model.lastError().text()}")
+            return
         self.detail_model.setFilter('"order_id" = -1')
         self.detail_model.select()
 
@@ -354,17 +356,17 @@ class OrdersWindow(QtWidgets.QMainWindow):
             current_id = self.master_model.index(current_row, 0).data()
         self.master_mapper.submit()
         if not self.master_model.submitAll():
-            QtWidgets.QMessageBox.warning(self, "Error", self.master_model.lastError().text())
+            QtWidgets.QMessageBox.warning(self, "Ошибка", f"Ошибка сохранения заказа: {self.master_model.lastError().text()}")
             return
 
         if not self.detail_model.submitAll():
-            QtWidgets.QMessageBox.warning(self, "Error", self.detail_model.lastError().text())
+            QtWidgets.QMessageBox.warning(self, "Ошибка", f"Ошибка сохранения состава заказа: {self.detail_model.lastError().text()}")
             return
 
         self.apply_order_filter()
         if current_id is not None:
             self.set_current_order_by_id(current_id)
-        QtWidgets.QMessageBox.information(self, "Saved", "Order data saved.")
+        QtWidgets.QMessageBox.information(self, "Успех", "Данные заказа сохранены")
 
     def set_current_order_by_id(self, order_id):
         for row in range(self.master_model.rowCount()):
@@ -376,12 +378,12 @@ class OrdersWindow(QtWidgets.QMainWindow):
     def add_detail(self):
         current_row = self.master_mapper.currentIndex()
         if current_row < 0:
-            QtWidgets.QMessageBox.warning(self, "Error", "Select an order first.")
+            QtWidgets.QMessageBox.warning(self, "Ошибка", "Сначала выберите заказ")
             return
 
         order_id = self.master_model.index(current_row, 0).data()
         if not order_id:
-            QtWidgets.QMessageBox.warning(self, "Error", "Save the order before adding products.")
+            QtWidgets.QMessageBox.warning(self, "Ошибка", "Сначала сохраните заказ")
             return
 
         dialog = ProductSelectDialog(self)
@@ -390,7 +392,7 @@ class OrdersWindow(QtWidgets.QMainWindow):
 
         row = self.detail_model.rowCount()
         if not self.detail_model.insertRow(row):
-            QtWidgets.QMessageBox.warning(self, "Error", self.detail_model.lastError().text())
+            QtWidgets.QMessageBox.warning(self, "Ошибка", f"Не удалось добавить товар в заказ: {self.detail_model.lastError().text()}")
             return
 
         self.detail_model.setData(self.detail_model.index(row, 3), order_id)
@@ -401,9 +403,11 @@ class OrdersWindow(QtWidgets.QMainWindow):
     def delete_detail(self):
         current_index = self.tw.currentIndex()
         if not current_index.isValid():
-            QtWidgets.QMessageBox.warning(self, "Error", "Select a product row to delete.")
+            QtWidgets.QMessageBox.warning(self, "Ошибка", "Выберите товар для удаления")
             return
-        self.detail_model.removeRow(current_index.row())
+        if not self.detail_model.removeRow(current_index.row()):
+            QtWidgets.QMessageBox.warning(self, "Ошибка", f"Не удалось удалить товар из заказа: {self.detail_model.lastError().text()}")
+            return
         self.tw.clearSelection()
 
     def make_report(self):

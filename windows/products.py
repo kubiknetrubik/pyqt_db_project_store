@@ -76,13 +76,22 @@ class ProductsWindow(QtWidgets.QMainWindow):
             self.mapper.toLast()
     def add(self):
         row = self.model.rowCount()
-        self.model.insertRow(row)
+        if not self.model.insertRow(row):
+            QtWidgets.QMessageBox.warning(self, "Ошибка", f"Не удалось добавить товар: {self.model.lastError().text()}")
+            return
         self.mapper.setCurrentIndex(row)
         self.le_name.setFocus()
     def delete(self):
         current_row = self.mapper.currentIndex()
-        self.model.removeRow(current_row)
-        self.model.submitAll()
+        if current_row < 0:
+            QtWidgets.QMessageBox.warning(self, "Ошибка", "Выберите товар для удаления")
+            return
+        if not self.model.removeRow(current_row):
+            QtWidgets.QMessageBox.warning(self, "Ошибка", f"Не удалось удалить товар: {self.model.lastError().text()}")
+            return
+        if not self.model.submitAll():
+            QtWidgets.QMessageBox.warning(self, "Ошибка", f"Не удалось удалить товар: {self.model.lastError().text()}")
+            return
         self.model.select()
         self.restore_row(fallback_row=current_row)
     def save(self):

@@ -104,14 +104,23 @@ class CategoriesWindow(QtWidgets.QMainWindow):
             self.update_detail_table()
     def add(self):
         row = self.master_model.rowCount()
-        self.master_model.insertRow(row)
+        if not self.master_model.insertRow(row):
+            QtWidgets.QMessageBox.warning(self, "Ошибка", f"Не удалось добавить категорию: {self.master_model.lastError().text()}")
+            return
         self.master_mapper.setCurrentIndex(row)
         self.le_name.setFocus()
         self.update_detail_table()
     def delete(self):
         current_row = self.master_mapper.currentIndex()
-        self.master_model.removeRow(current_row)
-        self.master_model.submitAll()
+        if current_row < 0:
+            QtWidgets.QMessageBox.warning(self, "Ошибка", "Выберите категорию для удаления")
+            return
+        if not self.master_model.removeRow(current_row):
+            QtWidgets.QMessageBox.warning(self, "Ошибка", f"Не удалось удалить категорию: {self.master_model.lastError().text()}")
+            return
+        if not self.master_model.submitAll():
+            QtWidgets.QMessageBox.warning(self, "Ошибка", f"Не удалось удалить категорию: {self.master_model.lastError().text()}")
+            return
         self.master_model.select()
         self.restore_master_row(fallback_row=current_row)
     def save(self):
