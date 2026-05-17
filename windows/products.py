@@ -53,18 +53,27 @@ class ProductsWindow(QtWidgets.QMainWindow):
                 return row
         return -1
 
+    def restore_row(self, current_id=None, fallback_row=0):
+        target_row = self.find_row_by_id(current_id) if current_id is not None else -1
+        if target_row < 0 and self.model.rowCount() > 0:
+            target_row = min(max(fallback_row, 0), self.model.rowCount() - 1)
+        if target_row >= 0:
+            self.mapper.setCurrentIndex(target_row)
+        else:
+            self.mapper.setCurrentIndex(-1)
+
     def next(self):
-        self.check()
-        self.mapper.toNext()
+        if not self.check():
+            self.mapper.toNext()
     def prev(self):
-        self.check()
-        self.mapper.toPrevious()
+        if not self.check():
+            self.mapper.toPrevious()
     def first(self):
-        self.check()
-        self.mapper.toFirst()
+        if not self.check():
+            self.mapper.toFirst()
     def last(self):
-        self.check()
-        self.mapper.toLast()
+        if not self.check():
+            self.mapper.toLast()
     def add(self):
         row = self.model.rowCount()
         self.model.insertRow(row)
@@ -75,7 +84,7 @@ class ProductsWindow(QtWidgets.QMainWindow):
         self.model.removeRow(current_row)
         self.model.submitAll()
         self.model.select()
-        self.mapper.toFirst()
+        self.restore_row(fallback_row=current_row)
     def save(self):
         current_row = self.mapper.currentIndex()
         current_id = None
@@ -84,9 +93,7 @@ class ProductsWindow(QtWidgets.QMainWindow):
         self.mapper.submit()
         if self.model.submitAll():
             self.model.select()
-            target_row = self.find_row_by_id(current_id) if current_id is not None else self.model.rowCount() - 1
-            if target_row >= 0:
-                self.mapper.setCurrentIndex(target_row)
+            self.restore_row(current_id, self.model.rowCount() - 1)
             QtWidgets.QMessageBox.information(self, "Успех", "Данные сохранены!")
         else:
             QtWidgets.QMessageBox.warning(self, "Ошибка", f"Ошибка сохранения: {self.model.lastError().text()}")
@@ -95,20 +102,21 @@ class ProductsWindow(QtWidgets.QMainWindow):
         current_id = None
         if current_row >= 0:
             current_id = self.model.index(current_row, 0).data()
-        filter_str = f"product_name ILIKE '%{self.le_search.text()}%'"
+        search_text = self.le_search.text().strip().replace("'", "''")
+        filter_str = f"product_name ILIKE '%{search_text}%'"
         self.model.setFilter(filter_str)
         self.model.select()
-        target_row = self.find_row_by_id(current_id) if current_id is not None else 0
-        if target_row >= 0:
-            self.mapper.setCurrentIndex(target_row)
-        elif self.model.rowCount() > 0:
-            self.mapper.toFirst()
+        self.restore_row(current_id, current_row)
     def filter_by_shipper(self, shipper_name):
         if self.sender().isChecked():
+            current_row = self.mapper.currentIndex()
+            current_id = None
+            if current_row >= 0:
+                current_id = self.model.index(current_row, 0).data()
             filter_str = f"shipper_name = '{shipper_name}'"
             self.model.setFilter(filter_str)
             self.model.select()
-            self.mapper.toFirst()
+            self.restore_row(current_id, current_row)
     def return_to_menu(self):
         self.main_menu.move(self.pos())
         self.main_menu.show()
@@ -264,5 +272,7 @@ class ProductsWindow(QtWidgets.QMainWindow):
             storage = self.model.index(current_row, 5).data() 
             if not name_val or name_val.strip() == "" or price =="" or category == "" or shipper == "" or storage == "":
                 self.model.revertAll()
+                self.model.select()
+                self.restore_row(fallback_row=current_row)
                 return True
         return False

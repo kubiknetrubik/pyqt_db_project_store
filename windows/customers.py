@@ -39,6 +39,15 @@ class CustomersWindow(QtWidgets.QMainWindow):
                 return row
         return -1
 
+    def restore_row(self, current_id=None, fallback_row=0):
+        target_row = self.find_row_by_id(current_id) if current_id is not None else -1
+        if target_row < 0 and self.model.rowCount() > 0:
+            target_row = min(max(fallback_row, 0), self.model.rowCount() - 1)
+        if target_row >= 0:
+            self.mapper.setCurrentIndex(target_row)
+        else:
+            self.mapper.setCurrentIndex(-1)
+
     def next(self):
         if not self.check():
             self.mapper.toNext()
@@ -61,8 +70,7 @@ class CustomersWindow(QtWidgets.QMainWindow):
         self.model.removeRow(current_row)
         self.model.submitAll()
         self.model.select()
-        if self.model.rowCount() > 0:
-            self.mapper.setCurrentIndex(min(current_row, self.model.rowCount() - 1))
+        self.restore_row(fallback_row=current_row)
     def save(self):
         current_row = self.mapper.currentIndex()
         current_id = None
@@ -71,9 +79,7 @@ class CustomersWindow(QtWidgets.QMainWindow):
         self.mapper.submit()
         if self.model.submitAll():
             self.model.select()
-            target_row = self.find_row_by_id(current_id) if current_id is not None else self.model.rowCount() - 1
-            if target_row >= 0:
-                self.mapper.setCurrentIndex(target_row)
+            self.restore_row(current_id, self.model.rowCount() - 1)
             QtWidgets.QMessageBox.information(self, "Успех", "Данные сохранены!")
         else:
             QtWidgets.QMessageBox.warning(self, "Ошибка", f"Ошибка сохранения: {self.model.lastError().text()}")
@@ -86,11 +92,7 @@ class CustomersWindow(QtWidgets.QMainWindow):
         filter_str = f"customers_phone ILIKE '%{search_text}%'"
         self.model.setFilter(filter_str)
         self.model.select()
-        target_row = self.find_row_by_id(current_id) if current_id is not None else 0
-        if target_row >= 0:
-            self.mapper.setCurrentIndex(target_row)
-        elif self.model.rowCount() > 0:
-            self.mapper.toFirst()
+        self.restore_row(current_id, current_row)
     def return_to_menu(self):
         self.main_menu.move(self.pos())
         self.main_menu.show()
@@ -123,7 +125,7 @@ class CustomersWindow(QtWidgets.QMainWindow):
             if not name_val or name_val.strip() == "":
                 self.model.revertAll()
                 self.model.select()   
-                self.mapper.setCurrentIndex(min(current_row, max(self.model.rowCount() - 1, 0)))
+                self.restore_row(fallback_row=current_row)
                 return True
         return False
     

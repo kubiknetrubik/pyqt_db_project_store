@@ -52,6 +52,16 @@ class CategoriesWindow(QtWidgets.QMainWindow):
                 return row
         return -1
 
+    def restore_master_row(self, current_id=None, fallback_row=0):
+        target_row = self.find_master_row_by_id(current_id) if current_id is not None else -1
+        if target_row < 0 and self.master_model.rowCount() > 0:
+            target_row = min(max(fallback_row, 0), self.master_model.rowCount() - 1)
+        if target_row >= 0:
+            self.master_mapper.setCurrentIndex(target_row)
+        else:
+            self.master_mapper.setCurrentIndex(-1)
+        self.update_detail_table()
+
     def apply_search(self):
         current_row = self.master_mapper.currentIndex()
         current_id = None
@@ -65,14 +75,7 @@ class CategoriesWindow(QtWidgets.QMainWindow):
             self.master_model.setFilter("")
         self.master_model.select()
 
-        target_row = self.find_master_row_by_id(current_id) if current_id is not None else 0
-        if target_row >= 0:
-            self.master_mapper.setCurrentIndex(target_row)
-        elif self.master_model.rowCount() > 0:
-            self.master_mapper.toFirst()
-        else:
-            self.master_mapper.setCurrentIndex(-1)
-        self.update_detail_table()
+        self.restore_master_row(current_id, current_row)
 
     def update_detail_table(self):
         current_master_row = self.master_mapper.currentIndex()
@@ -110,9 +113,7 @@ class CategoriesWindow(QtWidgets.QMainWindow):
         self.master_model.removeRow(current_row)
         self.master_model.submitAll()
         self.master_model.select()
-        if self.master_model.rowCount() > 0:
-            self.master_mapper.setCurrentIndex(min(current_row, self.master_model.rowCount() - 1))
-        self.update_detail_table()
+        self.restore_master_row(fallback_row=current_row)
     def save(self):
         current_row = self.master_mapper.currentIndex()
         current_id = None
@@ -121,10 +122,7 @@ class CategoriesWindow(QtWidgets.QMainWindow):
         self.master_mapper.submit()
         if self.master_model.submitAll():
             self.master_model.select()
-            target_row = self.find_master_row_by_id(current_id) if current_id is not None else self.master_model.rowCount() - 1
-            if target_row >= 0:
-                self.master_mapper.setCurrentIndex(target_row)
-            self.update_detail_table()
+            self.restore_master_row(current_id, self.master_model.rowCount() - 1)
             QtWidgets.QMessageBox.information(self, "Успех", "Данные сохранены!")
         else:
             QtWidgets.QMessageBox.warning(self, "Ошибка", f"Ошибка сохранения: {self.master_model.lastError().text()}")
@@ -162,7 +160,7 @@ class CategoriesWindow(QtWidgets.QMainWindow):
             if not name_val or name_val.strip() == "":
                 self.master_model.revertAll()
                 self.master_model.select()
-                self.master_mapper.toFirst()
+                self.restore_master_row(fallback_row=current_row)
                 return True
         return False
     
